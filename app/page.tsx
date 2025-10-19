@@ -32,6 +32,9 @@ export default function Home() {
 	const [showHistory, setShowHistory] = useState(false);
 	const [hint, setHint] = useState<string | null>(null);
 	const [isLoadingHint, setIsLoadingHint] = useState(false);
+	const [hasSubmitted, setHasSubmitted] = useState(false);
+	const [solution, setSolution] = useState<string | null>(null);
+	const [isLoadingSolution, setIsLoadingSolution] = useState(false);
 
 	useEffect(() => {
 		loadProblemHistory();
@@ -47,7 +50,9 @@ export default function Home() {
 		setIsCorrect(null);
 		setUserAnswer("");
 		setProblem(null);
+		setHasSubmitted(false);
 		setHint(null);
+		setSolution(null);
 
 		try {
 			const response = await fetch("/api/math-problem", {
@@ -89,6 +94,7 @@ export default function Home() {
 
 		setIsLoading(true);
 		setError(null);
+		setHasSubmitted(true);
 
 		try {
 			const response = await fetch("/api/math-problem/submit", {
@@ -133,12 +139,11 @@ export default function Home() {
 					return {
 						id: problem.id,
 						problem_text: problem.problem_text,
-						correct_answer: problem.final_answer,
+						correct_answer: problem.correct_answer,
 						created_at: problem.created_at,
 						submissions: problem.math_problem_submissions,
 					};
 				});
-
 				setProblemHistory(history);
 			}
 		} catch (err) {
@@ -179,6 +184,42 @@ export default function Home() {
 			console.error("Error getting hint:", err);
 		} finally {
 			setIsLoadingHint(false);
+		}
+	};
+
+	const getSolution = async () => {
+		if (!sessionId) return;
+
+		setIsLoadingSolution(true);
+		setError(null);
+
+		try {
+			const response = await fetch("/api/math-problem/solution", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					sessionId,
+				}),
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || "Failed to get solution");
+			}
+
+			const data = await response.json();
+			setSolution(data.solution);
+		} catch (err) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "Failed to get the solution. Please try again."
+			);
+			console.error("Error getting solution:", err);
+		} finally {
+			setIsLoadingSolution(false);
 		}
 	};
 
@@ -224,26 +265,59 @@ export default function Home() {
 									{problem.problem_text}
 								</p>
 
-								{/* Hint Section */}
-								{hint ? (
-									<div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-										<h3 className="text-lg font-semibold text-purple-800 mb-2">
-											💡 Hint
-										</h3>
-										<p className="text-purple-700">{hint}</p>
-									</div>
-								) : (
-									<div className="mb-4">
-										<button
-											onClick={getHint}
-											disabled={isLoadingHint}
-											className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
-										>
-											{isLoadingHint ? "Getting Hint..." : "Get Hint"}
-										</button>
-									</div>
+								{/* Hint Section - Only show before submission */}
+								{!hasSubmitted && (
+									<>
+										{hint ? (
+											<div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+												<h3 className="text-lg font-semibold text-purple-800 mb-2">
+													💡 Hint
+												</h3>
+												<p className="text-purple-700">{hint}</p>
+											</div>
+										) : (
+											<div className="mb-4">
+												<button
+													onClick={getHint}
+													disabled={isLoadingHint}
+													className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+												>
+													{isLoadingHint ? "Getting Hint..." : "Get Hint"}
+												</button>
+											</div>
+										)}
+									</>
 								)}
 
+								{/* Solution Section - Only show after submission */}
+								{hasSubmitted && (
+									<>
+										{solution ? (
+											<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+												<h3 className="text-lg font-semibold text-blue-800 mb-2">
+													📚 Step-by-Step Solution
+												</h3>
+												<div className="text-blue-700 whitespace-pre-line">
+													{solution}
+												</div>
+											</div>
+										) : (
+											<div className="mb-4">
+												<button
+													onClick={getSolution}
+													disabled={isLoadingSolution}
+													className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+												>
+													{isLoadingSolution
+														? "Loading Solution..."
+														: "Show Step-by-Step Solution"}
+												</button>
+											</div>
+										)}
+									</>
+								)}
+
+								{/* Submission Form - Disabled after submission */}
 								<form onSubmit={submitAnswer} className="space-y-4">
 									<div>
 										<label
@@ -258,19 +332,23 @@ export default function Home() {
 											value={userAnswer}
 											onChange={(e) => setUserAnswer(e.target.value)}
 											step="any"
-											className="text-gray-700 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="text-gray-700 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
 											placeholder="Enter your answer"
 											required
-											disabled={isLoading}
+											disabled={isLoading || hasSubmitted}
 										/>
 									</div>
 
 									<button
 										type="submit"
-										disabled={!userAnswer || isLoading}
-										className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none"
+										disabled={!userAnswer || isLoading || hasSubmitted}
+										className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
 									>
-										{isLoading ? "Checking..." : "Submit Answer"}
+										{isLoading
+											? "Submitting..."
+											: hasSubmitted
+											? "Already Submitted"
+											: "Submit Answer"}
 									</button>
 								</form>
 							</div>

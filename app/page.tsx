@@ -30,6 +30,8 @@ export default function Home() {
 	const [error, setError] = useState<string | null>(null);
 	const [problemHistory, setProblemHistory] = useState<ProblemHistory[]>([]);
 	const [showHistory, setShowHistory] = useState(false);
+	const [hint, setHint] = useState<string | null>(null);
+	const [isLoadingHint, setIsLoadingHint] = useState(false);
 
 	useEffect(() => {
 		loadProblemHistory();
@@ -45,6 +47,7 @@ export default function Home() {
 		setIsCorrect(null);
 		setUserAnswer("");
 		setProblem(null);
+		setHint(null);
 
 		try {
 			const response = await fetch("/api/math-problem", {
@@ -143,6 +146,42 @@ export default function Home() {
 		}
 	};
 
+	const getHint = async () => {
+		if (!sessionId) return;
+
+		setIsLoadingHint(true);
+		setError(null);
+
+		try {
+			const response = await fetch("/api/math-problem/hint", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					sessionId,
+				}),
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || "Failed to get hint");
+			}
+
+			const data = await response.json();
+			setHint(data.hint);
+		} catch (err) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "Failed to get a hint. Please try again."
+			);
+			console.error("Error getting hint:", err);
+		} finally {
+			setIsLoadingHint(false);
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
 			<main className="container mx-auto px-4 py-8 max-w-4xl">
@@ -184,6 +223,26 @@ export default function Home() {
 								<p className="text-lg text-gray-800 leading-relaxed mb-6">
 									{problem.problem_text}
 								</p>
+
+								{/* Hint Section */}
+								{hint ? (
+									<div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+										<h3 className="text-lg font-semibold text-purple-800 mb-2">
+											💡 Hint
+										</h3>
+										<p className="text-purple-700">{hint}</p>
+									</div>
+								) : (
+									<div className="mb-4">
+										<button
+											onClick={getHint}
+											disabled={isLoadingHint}
+											className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+										>
+											{isLoadingHint ? "Getting Hint..." : "Get Hint"}
+										</button>
+									</div>
+								)}
 
 								<form onSubmit={submitAnswer} className="space-y-4">
 									<div>

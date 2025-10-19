@@ -20,6 +20,13 @@ interface ProblemHistory {
 	}[];
 }
 
+interface Score {
+	total: number;
+	correct: number;
+	streak: number;
+	bestStreak: number;
+}
+
 export default function Home() {
 	const [problem, setProblem] = useState<MathProblem | null>(null);
 	const [userAnswer, setUserAnswer] = useState("");
@@ -35,6 +42,12 @@ export default function Home() {
 	const [hasSubmitted, setHasSubmitted] = useState(false);
 	const [solution, setSolution] = useState<string | null>(null);
 	const [isLoadingSolution, setIsLoadingSolution] = useState(false);
+	const [score, setScore] = useState<Score>({
+		total: 0,
+		correct: 0,
+		streak: 0,
+		bestStreak: 0,
+	});
 
 	useEffect(() => {
 		loadProblemHistory();
@@ -116,6 +129,8 @@ export default function Home() {
 			const data = await response.json();
 			setFeedback(data.feedback);
 			setIsCorrect(data.isCorrect);
+			updateScore(data.isCorrect);
+
 			await loadProblemHistory();
 		} catch (err) {
 			setError(
@@ -223,6 +238,45 @@ export default function Home() {
 		}
 	};
 
+	const saveScore = (newScore: Score) => {
+		setScore(newScore);
+		if (typeof window !== "undefined") {
+			localStorage.setItem("mathProblemScore", JSON.stringify(newScore));
+		}
+	};
+
+	const updateScore = (wasCorrect: boolean) => {
+		setScore((prevScore) => {
+			const newStreak = wasCorrect ? prevScore.streak + 1 : 0;
+			const newScore = {
+				total: prevScore.total + 1,
+				correct: wasCorrect ? prevScore.correct + 1 : prevScore.correct,
+				streak: newStreak,
+				bestStreak: Math.max(prevScore.bestStreak, newStreak),
+			};
+
+			// Save to localStorage
+			if (typeof window !== "undefined") {
+				localStorage.setItem("mathProblemScore", JSON.stringify(newScore));
+			}
+
+			return newScore;
+		});
+	};
+
+	const resetScore = () => {
+		const newScore = {
+			total: 0,
+			correct: 0,
+			streak: 0,
+			bestStreak: 0,
+		};
+		saveScore(newScore);
+	};
+
+	const accuracy =
+		score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
 			<main className="container mx-auto px-4 py-8 max-w-4xl">
@@ -230,12 +284,51 @@ export default function Home() {
 					<h1 className="text-4xl font-bold text-gray-800">
 						Math Problem Generator
 					</h1>
-					<button
-						onClick={() => setShowHistory(!showHistory)}
-						className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
-					>
-						{showHistory ? "Back to Problem" : "View History"}
-					</button>
+					<div className="flex items-center gap-4">
+						{/* Score Display */}
+						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+							<div className="flex items-center gap-4 text-sm">
+								<div className="text-center">
+									<div className="font-bold text-gray-800">
+										{score.correct}/{score.total}
+									</div>
+									<div className="text-xs text-gray-600">Score</div>
+								</div>
+								<div className="text-center">
+									<div className="font-bold text-gray-800">{accuracy}%</div>
+									<div className="text-xs text-gray-600">Accuracy</div>
+								</div>
+								<div className="text-center">
+									<div className="font-bold text-green-600">
+										{score.streak}🔥
+									</div>
+									<div className="text-xs text-gray-600">Streak</div>
+								</div>
+								{score.bestStreak > 0 && (
+									<div className="text-center">
+										<div className="font-bold text-purple-600">
+											Best: {score.bestStreak}
+										</div>
+										<div className="text-xs text-gray-600">Streak</div>
+									</div>
+								)}
+								<button
+									onClick={resetScore}
+									className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded transition duration-200"
+									title="Reset Score"
+								>
+									Reset
+								</button>
+							</div>
+						</div>
+
+						<button
+							onClick={() => setShowHistory(!showHistory)}
+							className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+						>
+							{showHistory ? "Back to Problem" : "View History"}
+						</button>
+					</div>
 				</div>
 
 				{error && (
@@ -344,10 +437,10 @@ export default function Home() {
 										disabled={!userAnswer || isLoading || hasSubmitted}
 										className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
 									>
-										{isLoading
-											? "Submitting..."
-											: hasSubmitted
+										{hasSubmitted
 											? "Already Submitted"
+											: isLoading
+											? "Checking..."
 											: "Submit Answer"}
 									</button>
 								</form>

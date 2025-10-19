@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
 				- Geometry (area, perimeter, properties of 2D/3D shapes)
 				- Measurement (involving time, weight, length, volume, or temperature)
 			- Ensure the language is age-appropriate, clear, and engaging.
-			- Use real-world or relatable scenarios where possible (e.g., school, shopping, sports, food).
-      - Ensure the math is solvable with the given information`,
+      - Ensure the math is solvable with the given information
+			- Ensure the answer is correct based on the problem text`,
 		});
 
 		const responseText = response.text;

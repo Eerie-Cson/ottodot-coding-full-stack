@@ -27,6 +27,12 @@ interface Score {
 	bestStreak: number;
 }
 
+export enum Difficulty {
+	EASY = "Easy",
+	MEDIUM = "Medium",
+	HARD = "Hard",
+}
+
 export default function Home() {
 	const [problem, setProblem] = useState<MathProblem | null>(null);
 	const [userAnswer, setUserAnswer] = useState("");
@@ -48,6 +54,7 @@ export default function Home() {
 		streak: 0,
 		bestStreak: 0,
 	});
+	const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
 
 	useEffect(() => {
 		loadProblemHistory();
@@ -73,6 +80,7 @@ export default function Home() {
 				headers: {
 					"Content-Type": "application/json",
 				},
+				body: JSON.stringify({ difficulty }),
 			});
 
 			if (!response.ok) {
@@ -339,11 +347,101 @@ export default function Home() {
 
 				{!showHistory ? (
 					<>
+						{/* Difficulty Selection */}
 						<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+							<div className="mb-6">
+								<label className="block text-lg font-semibold text-gray-700 mb-4">
+									Select Difficulty:
+								</label>
+								<div className="flex gap-3">
+									<label
+										className={`flex-1 cursor-pointer transition duration-200 ${
+											difficulty === Difficulty.EASY
+												? "bg-green-100 border-2 border-green-500"
+												: "bg-gray-50 border-2 border-gray-300 hover:border-green-400"
+										} rounded-lg p-4 text-center`}
+									>
+										<input
+											type="radio"
+											name="difficulty"
+											value={Difficulty.EASY}
+											checked={difficulty === Difficulty.EASY}
+											onChange={(e) =>
+												setDifficulty(e.target.value as Difficulty)
+											}
+											className="sr-only"
+										/>
+										<div
+											className={`font-semibold ${
+												difficulty === Difficulty.EASY
+													? "text-green-700"
+													: "text-gray-700"
+											}`}
+										>
+											Easy
+										</div>
+									</label>
+									<label
+										className={`flex-1 cursor-pointer transition duration-200 ${
+											difficulty === Difficulty.MEDIUM
+												? "bg-yellow-100 border-2 border-yellow-500"
+												: "bg-gray-50 border-2 border-gray-300 hover:border-yellow-400"
+										} rounded-lg p-4 text-center`}
+									>
+										<input
+											type="radio"
+											name="difficulty"
+											value={Difficulty.MEDIUM}
+											checked={difficulty === Difficulty.MEDIUM}
+											onChange={(e) =>
+												setDifficulty(e.target.value as Difficulty)
+											}
+											className="sr-only"
+										/>
+										<div
+											className={`font-semibold ${
+												difficulty === Difficulty.MEDIUM
+													? "text-yellow-700"
+													: "text-gray-700"
+											}`}
+										>
+											Medium
+										</div>
+									</label>
+									<label
+										className={`flex-1 cursor-pointer transition duration-200 ${
+											difficulty === Difficulty.HARD
+												? "bg-red-100 border-2 border-red-500"
+												: "bg-gray-50 border-2 border-gray-300 hover:border-red-400"
+										} rounded-lg p-4 text-center`}
+									>
+										<input
+											type="radio"
+											name="difficulty"
+											value={Difficulty.HARD}
+											checked={difficulty === Difficulty.HARD}
+											onChange={(e) =>
+												setDifficulty(e.target.value as Difficulty)
+											}
+											className="sr-only"
+										/>
+										<div
+											className={`font-semibold ${
+												difficulty === Difficulty.HARD
+													? "text-red-700"
+													: "text-gray-700"
+											}`}
+										>
+											Hard
+										</div>
+									</label>
+								</div>
+							</div>
+
 							<button
 								onClick={generateProblem}
 								disabled={isLoading}
-								className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none"
+								className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
 							>
 								{isLoading ? "Generating..." : "Generate New Problem"}
 							</button>

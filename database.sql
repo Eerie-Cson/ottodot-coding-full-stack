@@ -37,4 +37,5 @@ CREATE POLICY "Allow anonymous access to math_problem_submissions" ON math_probl
 
 -- Create indexes for better performance
 CREATE INDEX idx_math_problem_submissions_session_id ON math_problem_submissions(session_id);
+CREATE INDEX  idx_math_problem_submissions_created_at ON math_problem_submissions(created_at DESC);
 CREATE INDEX idx_math_problem_sessions_created_at ON math_problem_sessions(created_at DESC);

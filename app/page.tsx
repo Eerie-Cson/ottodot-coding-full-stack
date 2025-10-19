@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface MathProblem {
 	problem_text: string;
 	final_answer: number;
+}
+
+interface ProblemHistory {
+	id: string;
+	problem_text: string;
+	correct_answer: number;
+	created_at: string;
+	submissions?: {
+		user_answer: number;
+		is_correct: boolean;
+		feedback_text: string;
+		created_at: string;
+	}[];
 }
 
 export default function Home() {
@@ -15,6 +28,12 @@ export default function Home() {
 	const [sessionId, setSessionId] = useState<string | null>(null);
 	const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [problemHistory, setProblemHistory] = useState<ProblemHistory[]>([]);
+	const [showHistory, setShowHistory] = useState(false);
+
+	useEffect(() => {
+		loadProblemHistory();
+	}, []);
 
 	const generateProblem = async () => {
 		// TODO: Implement problem generation logic
@@ -43,6 +62,8 @@ export default function Home() {
 			const data = await response.json();
 			setProblem(data.problem);
 			setSessionId(data.sessionId);
+
+			await loadProblemHistory();
 		} catch (err) {
 			setError(
 				err instanceof Error
@@ -86,6 +107,7 @@ export default function Home() {
 			const data = await response.json();
 			setFeedback(data.feedback);
 			setIsCorrect(data.isCorrect);
+			await loadProblemHistory();
 		} catch (err) {
 			setError(
 				err instanceof Error
@@ -98,12 +120,43 @@ export default function Home() {
 		}
 	};
 
+	const loadProblemHistory = async () => {
+		try {
+			const response = await fetch("/api/math-problem/history");
+			if (response.ok) {
+				const data = await response.json();
+
+				const history: ProblemHistory[] = data.history.map((problem) => {
+					return {
+						id: problem.id,
+						problem_text: problem.problem_text,
+						correct_answer: problem.final_answer,
+						created_at: problem.created_at,
+						submissions: problem.math_problem_submissions,
+					};
+				});
+
+				setProblemHistory(history);
+			}
+		} catch (err) {
+			console.error("Error loading history:", err);
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-			<main className="container mx-auto px-4 py-8 max-w-2xl">
-				<h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-					Math Problem Generator
-				</h1>
+			<main className="container mx-auto px-4 py-8 max-w-4xl">
+				<div className="flex justify-between items-center mb-8">
+					<h1 className="text-4xl font-bold text-gray-800">
+						Math Problem Generator
+					</h1>
+					<button
+						onClick={() => setShowHistory(!showHistory)}
+						className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+					>
+						{showHistory ? "Back to Problem" : "View History"}
+					</button>
+				</div>
 
 				{error && (
 					<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -111,67 +164,141 @@ export default function Home() {
 					</div>
 				)}
 
-				<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-					<button
-						onClick={generateProblem}
-						disabled={isLoading}
-						className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
-					>
-						{isLoading ? "Generating..." : "Generate New Problem"}
-					</button>
-				</div>
-
-				{problem && (
-					<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-						<h2 className="text-xl font-semibold mb-4 text-gray-700">
-							Problem:
-						</h2>
-						<p className="text-lg text-gray-800 leading-relaxed mb-6">
-							{problem.problem_text}
-						</p>
-
-						<form onSubmit={submitAnswer} className="space-y-4">
-							<div>
-								<label
-									htmlFor="answer"
-									className="block text-sm font-medium text-gray-700 mb-2"
-								>
-									Your Answer:
-								</label>
-								<input
-									type="number"
-									id="answer"
-									value={userAnswer}
-									onChange={(e) => setUserAnswer(e.target.value)}
-									className="text-gray-700 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-									placeholder="Enter your answer"
-									required
-								/>
-							</div>
-
+				{!showHistory ? (
+					<>
+						<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
 							<button
-								type="submit"
-								disabled={!userAnswer || isLoading}
-								className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
+								onClick={generateProblem}
+								disabled={isLoading}
+								className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none"
 							>
-								Submit Answer
+								{isLoading ? "Generating..." : "Generate New Problem"}
 							</button>
-						</form>
-					</div>
-				)}
+						</div>
 
-				{feedback && (
-					<div
-						className={`rounded-lg shadow-lg p-6 ${
-							isCorrect
-								? "bg-green-50 border-2 border-green-200"
-								: "bg-yellow-50 border-2 border-yellow-200"
-						}`}
-					>
-						<h2 className="text-xl font-semibold mb-4 text-gray-700">
-							{isCorrect ? "✅ Correct!" : "❌ Not quite right"}
+						{problem && (
+							<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+								<h2 className="text-xl font-semibold mb-4 text-gray-700">
+									Problem:
+								</h2>
+								<p className="text-lg text-gray-800 leading-relaxed mb-6">
+									{problem.problem_text}
+								</p>
+
+								<form onSubmit={submitAnswer} className="space-y-4">
+									<div>
+										<label
+											htmlFor="answer"
+											className="block text-sm font-medium text-gray-700 mb-2"
+										>
+											Your Answer:
+										</label>
+										<input
+											type="number"
+											id="answer"
+											value={userAnswer}
+											onChange={(e) => setUserAnswer(e.target.value)}
+											step="any"
+											className="text-gray-700 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											placeholder="Enter your answer"
+											required
+											disabled={isLoading}
+										/>
+									</div>
+
+									<button
+										type="submit"
+										disabled={!userAnswer || isLoading}
+										className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none"
+									>
+										{isLoading ? "Checking..." : "Submit Answer"}
+									</button>
+								</form>
+							</div>
+						)}
+
+						{feedback && (
+							<div
+								className={`rounded-lg shadow-lg p-6 ${
+									isCorrect
+										? "bg-green-50 border-2 border-green-200"
+										: "bg-yellow-50 border-2 border-yellow-200"
+								}`}
+							>
+								<h2 className="text-xl font-semibold mb-4 text-gray-700">
+									{isCorrect ? "✅ Correct!" : "❌ Not quite right"}
+								</h2>
+								<p className="text-gray-800 leading-relaxed">{feedback}</p>
+							</div>
+						)}
+					</>
+				) : (
+					<div className="bg-white rounded-lg shadow-lg p-6">
+						<h2 className="text-2xl font-bold mb-6 text-gray-800">
+							Problem History
 						</h2>
-						<p className="text-gray-800 leading-relaxed">{feedback}</p>
+
+						{problemHistory.length === 0 ? (
+							<p className="text-gray-600 text-center py-8">
+								No problems generated yet.
+							</p>
+						) : (
+							<div className="space-y-6">
+								{problemHistory.map((session) => (
+									<div
+										key={session.id}
+										className="border border-gray-200 rounded-lg p-4"
+									>
+										<div className="flex justify-between items-start mb-2">
+											<h3 className="font-semibold text-gray-800">Problem</h3>
+											<span className="text-sm text-gray-500">
+												{new Date(session.created_at).toLocaleDateString()}
+											</span>
+										</div>
+										<p className="text-gray-700 mb-4">{session.problem_text}</p>
+
+										{session.submissions && session.submissions.length > 0 ? (
+											session.submissions.map((submission, index) => (
+												<div
+													key={index}
+													className={`p-3 rounded-lg ${
+														submission.is_correct
+															? "bg-green-50 border border-green-200"
+															: "bg-red-50 border border-red-200"
+													}`}
+												>
+													<div className="flex justify-between items-center mb-2">
+														<span
+															className={`font-medium ${
+																submission.is_correct
+																	? "text-green-800"
+																	: "text-red-800"
+															}`}
+														>
+															{submission.is_correct
+																? "✅ Correct"
+																: "❌ Incorrect"}
+														</span>
+														<span className="text-sm text-gray-600">
+															Your answer: {submission.user_answer}
+															{!submission.is_correct &&
+																` (Correct: ${session.correct_answer})`}
+														</span>
+													</div>
+													<p className="text-gray-700 text-sm">
+														{submission.feedback_text}
+													</p>
+												</div>
+											))
+										) : (
+											<p className="text-gray-500 text-sm italic">
+												No submission yet
+											</p>
+										)}
+									</div>
+								))}
+							</div>
+						)}
 					</div>
 				)}
 			</main>

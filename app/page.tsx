@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Difficulty } from "@lib/type/difficulty";
 
 interface MathProblem {
 	problem_text: string;
@@ -25,12 +26,6 @@ interface Score {
 	correct: number;
 	streak: number;
 	bestStreak: number;
-}
-
-export enum Difficulty {
-	EASY = "Easy",
-	MEDIUM = "Medium",
-	HARD = "Hard",
 }
 
 export default function Home() {
@@ -89,6 +84,7 @@ export default function Home() {
 			}
 
 			const data = await response.json();
+			console.log(data);
 			setProblem(data.problem);
 			setSessionId(data.sessionId);
 

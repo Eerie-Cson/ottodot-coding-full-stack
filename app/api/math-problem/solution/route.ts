@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		const solutionResponse = await ai.models.generateContent({
-			model: "gemini-2.0-flash",
+			model: "gemini-2.5-flash",
 			contents: `Provide a clear, step-by-step solution for this Primary 5 math problem. 
 
       Problem: "${session.problem_text}"

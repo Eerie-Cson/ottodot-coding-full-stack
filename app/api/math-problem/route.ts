@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from "@lib/supabaseClient";
-import { Difficulty } from "../../page";
+import { Difficulty } from "@lib/type/difficulty";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
 
@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
 		];
 
 		const problemTypes = [
-			"Arithmetic word problem (involving addition, subtraction, multiplication, division, fractions, decimals, or percentages)",
-			"Pattern or sequence word problem (recognizing number patterns or completing a sequence)",
-			"Logical puzzle word problem (requiring deduction or reasoning to find the answer)",
-			"Geometry word problem (area, perimeter, properties of 2D/3D shapes)",
-			"Measurement word problem (involving time, weight, length, volume, or temperature)",
+			"Arithmetic word problem",
+			"Pattern or sequence word problem",
+			"Logical puzzle word problem",
+			"Geometry word problem",
+			"Measurement word problem",
 		];
 
 		const randomScenario =
@@ -40,26 +40,11 @@ export async function POST(request: NextRequest) {
 			problemTypes[Math.floor(Math.random() * problemTypes.length)];
 
 		const difficultyPrompts = {
-			[Difficulty.EASY]: `Generate an EASY Primary 5 level ${randomProblemType} set in a ${randomScenario} scenario. 
-      Requirements:
-      - Use simple arithmetic (addition, subtraction, basic multiplication/division)
-      - Numbers should be small and easy to work with (under 100)
-      - One or two steps to solve
-      - Clear and straightforward language`,
+			[Difficulty.EASY]: `Create a simple arithmetic problem using basic operations (+, -, ×, ÷) with whole numbers under 100. The problem should be solvable in 1-2 steps.`,
 
-			[Difficulty.MEDIUM]: `Generate a MEDIUM difficulty Primary 5 level ${randomProblemType}  in a ${randomScenario} scenario.
-      Requirements:
-      - Can include fractions, decimals, percentages, or multi-step problems
-      - Numbers can be larger (up to 1000)
-      - 2-3 steps to solve
-      - May require some reasoning or conversion`,
+			[Difficulty.MEDIUM]: `Create a problem that may involve fractions, decimals, percentages, or multi-step reasoning with numbers up to 1000. The problem should require 2-3 logical steps to solve.`,
 
-			[Difficulty.HARD]: `Generate a CHALLENGING Primary 5 level ${randomProblemType} in a ${randomScenario} scenario.
-      Requirements:
-      - Can include complex fractions, decimals, percentages, ratios, or basic algebra
-      - Multi-step problems (3+ steps)
-      - May require logical reasoning, pattern recognition, or problem-solving strategies
-      - Real-world applications and more complex scenarios`,
+			[Difficulty.HARD]: `Create a challenging problem that requires multiple steps, logical reasoning, and may involve combinations of fractions, decimals, percentages, ratios, or basic algebraic thinking.`,
 		};
 
 		const difficultyPrompt =
@@ -67,20 +52,31 @@ export async function POST(request: NextRequest) {
 			difficultyPrompts[Difficulty.MEDIUM];
 
 		const response = await ai.models.generateContent({
-			model: "gemini-2.0-flash",
-			contents: `${difficultyPrompt}
-      
-      The response must be a valid JSON object with exactly this structure:
-      {
-        "problem_text": "The math word problem text here...",
-        "final_answer": 123
-      }
+			model: "gemini-2.5-flash",
+			contents: `You are a Primary 5 math teacher. Create a math word problem with these specifications:
 
-			Additional requirements:
-			- Ensure the language is age-appropriate, clear, and engaging.
-      - Ensure the math is solvable with the given information
-			- Ensure the answer is correct based on the problem text
-			- Ensure the problem contains only one question with a single final answer`,
+				PROBLEM CONTEXT: ${randomScenario}
+				PROBLEM TYPE: ${randomProblemType}
+				DIFFICULTY LEVEL: ${difficulty}
+				${difficultyPrompt}
+
+				CRITICAL REQUIREMENTS:
+				1. FIRST, create a clear, engaging word problem that has exactly ONE question and ONE numerical answer
+				2. THEN, calculate the correct answer step-by-step to ensure accuracy
+				3. FINALLY, provide ONLY the JSON output below
+
+				IMPORTANT CONSTRAINTS:
+				- The problem must be solvable with the information provided
+				- Use age-appropriate language for 10-11 year olds
+				- The final answer must be a single number
+				- No multiple-choice options
+				- No follow-up questions or multiple questions (a, b, c, etc.)
+
+				OUTPUT FORMAT (JSON only, no other text):
+				{
+					"problem_text": "The math word problem text here...",
+					"final_answer": 123
+				}`,
 		});
 
 		const responseText = response.text;

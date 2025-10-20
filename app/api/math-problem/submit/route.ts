@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 			Requirements for feedback:	
 			- Generate ONLY ONE feedback message (no multiple options)
 			- Be encouraging and supportive
-			- If incorrect, gently explain the mistake and how to approach similar problems
+			- If incorrect, gently explain the mistake and how to approach similar problems and show the correct answer
 			- If correct, provide positive reinforcement and acknowledge their problem-solving strategy
 			- Keep it brief and age-appropriate (Primary 5 level)
 			- Maximum 1-2 sentences

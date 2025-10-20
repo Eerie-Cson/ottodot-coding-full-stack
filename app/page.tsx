@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Difficulty } from "@lib/type/difficulty";
+import { Difficulty, ProblemType } from "@lib/types";
 
 interface MathProblem {
 	problem_text: string;
@@ -28,13 +28,6 @@ interface Score {
 	bestStreak: number;
 }
 
-type ProblemType =
-	| "addition"
-	| "subtraction"
-	| "multiplication"
-	| "division"
-	| "mixed";
-
 export default function Home() {
 	const [problem, setProblem] = useState<MathProblem | null>(null);
 	const [userAnswer, setUserAnswer] = useState("");
@@ -57,10 +50,13 @@ export default function Home() {
 		bestStreak: 0,
 	});
 	const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
-	const [problemType, setProblemType] = useState<ProblemType>("mixed");
+	const [problemType, setProblemType] = useState<ProblemType>(
+		ProblemType.ADDITION
+	);
 
 	useEffect(() => {
 		loadProblemHistory();
+		loadScore();
 	}, []);
 
 	const generateProblem = async () => {
@@ -286,6 +282,15 @@ export default function Home() {
 		saveScore(newScore);
 	};
 
+	const loadScore = () => {
+		if (typeof window !== "undefined") {
+			const storedScore = localStorage.getItem("mathProblemScore");
+			if (storedScore) {
+				setScore(JSON.parse(storedScore));
+			}
+		}
+	};
+
 	const accuracy =
 		score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
 
@@ -447,7 +452,9 @@ export default function Home() {
 								disabled={isLoading}
 								className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
 							>
-								{isLoading ? "Generating..." : "Generate New Problem"}
+								{isLoading && !problem && !difficulty
+									? "Generating..."
+									: "Generate New Problem"}
 							</button>
 						</div>
 
@@ -458,7 +465,7 @@ export default function Home() {
 							<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
 								<label
 									className={`cursor-pointer transition duration-200 ${
-										problemType === "addition"
+										problemType === ProblemType.ADDITION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
 									} rounded-lg p-4 text-center`}
@@ -466,8 +473,8 @@ export default function Home() {
 									<input
 										type="radio"
 										name="problemType"
-										value="addition"
-										checked={problemType === "addition"}
+										value={ProblemType.ADDITION}
+										checked={problemType === ProblemType.ADDITION}
 										onChange={(e) =>
 											setProblemType(e.target.value as ProblemType)
 										}
@@ -475,7 +482,7 @@ export default function Home() {
 									/>
 									<div
 										className={`font-semibold ${
-											problemType === "addition"
+											problemType === ProblemType.ADDITION
 												? "text-blue-700"
 												: "text-gray-700"
 										}`}
@@ -485,7 +492,7 @@ export default function Home() {
 								</label>
 								<label
 									className={`cursor-pointer transition duration-200 ${
-										problemType === "subtraction"
+										problemType === ProblemType.SUBTRACTION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
 									} rounded-lg p-4 text-center`}
@@ -493,8 +500,8 @@ export default function Home() {
 									<input
 										type="radio"
 										name="problemType"
-										value="subtraction"
-										checked={problemType === "subtraction"}
+										value={ProblemType.SUBTRACTION}
+										checked={problemType === ProblemType.SUBTRACTION}
 										onChange={(e) =>
 											setProblemType(e.target.value as ProblemType)
 										}
@@ -502,7 +509,7 @@ export default function Home() {
 									/>
 									<div
 										className={`font-semibold ${
-											problemType === "subtraction"
+											problemType === ProblemType.SUBTRACTION
 												? "text-blue-700"
 												: "text-gray-700"
 										}`}
@@ -512,7 +519,7 @@ export default function Home() {
 								</label>
 								<label
 									className={`cursor-pointer transition duration-200 ${
-										problemType === "multiplication"
+										problemType === ProblemType.MULTIPLICATION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
 									} rounded-lg p-4 text-center`}
@@ -520,8 +527,8 @@ export default function Home() {
 									<input
 										type="radio"
 										name="problemType"
-										value="multiplication"
-										checked={problemType === "multiplication"}
+										value={ProblemType.MULTIPLICATION}
+										checked={problemType === ProblemType.MULTIPLICATION}
 										onChange={(e) =>
 											setProblemType(e.target.value as ProblemType)
 										}
@@ -529,7 +536,7 @@ export default function Home() {
 									/>
 									<div
 										className={`font-semibold ${
-											problemType === "multiplication"
+											problemType === ProblemType.MULTIPLICATION
 												? "text-blue-700"
 												: "text-gray-700"
 										}`}
@@ -539,7 +546,7 @@ export default function Home() {
 								</label>
 								<label
 									className={`cursor-pointer transition duration-200 ${
-										problemType === "division"
+										problemType === ProblemType.DIVISION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
 									} rounded-lg p-4 text-center`}
@@ -547,8 +554,8 @@ export default function Home() {
 									<input
 										type="radio"
 										name="problemType"
-										value="division"
-										checked={problemType === "division"}
+										value={ProblemType.DIVISION}
+										checked={problemType === ProblemType.DIVISION}
 										onChange={(e) =>
 											setProblemType(e.target.value as ProblemType)
 										}
@@ -556,7 +563,7 @@ export default function Home() {
 									/>
 									<div
 										className={`font-semibold ${
-											problemType === "division"
+											problemType === ProblemType.DIVISION
 												? "text-blue-700"
 												: "text-gray-700"
 										}`}

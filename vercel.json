@@ -1,0 +1,20 @@
+{
+	"version": 2,
+	"buildCommand": "npm run build",
+	"outputDirectory": ".next",
+	"installCommand": "npm install",
+	"functions": {
+		"app/api/math-problem/route.ts": {
+			"maxDuration": 30
+		},
+		"app/api/math-problem/submit/route.ts": {
+			"maxDuration": 30
+		},
+		"app/api/math-problem/hint/route.ts": {
+			"maxDuration": 30
+		},
+		"app/api/math-problem/solution/route.ts": {
+			"maxDuration": 30
+		}
+	}
+}

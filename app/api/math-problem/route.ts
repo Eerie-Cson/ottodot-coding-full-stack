@@ -5,50 +5,51 @@ import { Difficulty } from "@lib/type/difficulty";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
 
+const scenarios = [
+	"school classroom setting",
+	"sports competition",
+	"science experiment",
+	"art project",
+	"gardening activity",
+	"shopping trip",
+	"travel planning",
+	"game scoring",
+	"library book organization",
+	"pet care",
+	"weather tracking",
+	"music practice",
+	"construction project",
+	"fitness challenge",
+];
+
+const problemTypePrompts = {
+	addition: `Create an ADDITION word problem where the main operation is adding numbers together.`,
+	subtraction: `Create a SUBTRACTION word problem where the main operation is taking away or finding the difference.`,
+	multiplication: `Create a MULTIPLICATION word problem involving equal groups, arrays, or repeated addition.`,
+	division: `Create a DIVISION word problem involving sharing equally or grouping into equal parts.`,
+};
+
+const difficultyPrompts = {
+	[Difficulty.EASY]: `Use basic operations with whole numbers under 100. The problem should be solvable in 1-2 steps.`,
+
+	[Difficulty.MEDIUM]: `Use numbers up to 1000. May involve fractions, decimals, percentages, or multi-step reasoning (2-3 steps).`,
+
+	[Difficulty.HARD]: `Use complex operations, multi-step reasoning (3+ steps), and may involve combinations of operations with fractions, decimals, percentages, or ratios.`,
+};
+
 export async function POST(request: NextRequest) {
 	try {
-		const { difficulty } = await request.json();
-
-		const scenarios = [
-			"school classroom setting",
-			"sports competition",
-			"science experiment",
-			"art project",
-			"gardening activity",
-			"shopping trip",
-			"travel planning",
-			"game scoring",
-			"library book organization",
-			"pet care",
-			"weather tracking",
-			"music practice",
-			"construction project",
-			"fitness challenge",
-		];
-
-		const problemTypes = [
-			"Arithmetic word problem",
-			"Pattern or sequence word problem",
-			"Logical puzzle word problem",
-			"Geometry word problem",
-			"Measurement word problem",
-		];
+		const body = await request.json();
 
 		const randomScenario =
 			scenarios[Math.floor(Math.random() * scenarios.length)];
-		const randomProblemType =
-			problemTypes[Math.floor(Math.random() * problemTypes.length)];
 
-		const difficultyPrompts = {
-			[Difficulty.EASY]: `Create a simple arithmetic problem using basic operations (+, -, ×, ÷) with whole numbers under 100. The problem should be solvable in 1-2 steps.`,
-
-			[Difficulty.MEDIUM]: `Create a problem that may involve fractions, decimals, percentages, or multi-step reasoning with numbers up to 1000. The problem should require 2-3 logical steps to solve.`,
-
-			[Difficulty.HARD]: `Create a challenging problem that requires multiple steps, logical reasoning, and may involve combinations of fractions, decimals, percentages, ratios, or basic algebraic thinking.`,
-		};
+		const problemTypePrompt =
+			problemTypePrompts[body.problemType as keyof typeof problemTypePrompts] ||
+			problemTypePrompts.addition;
 
 		const difficultyPrompt =
-			difficultyPrompts[difficulty as Difficulty] ||
+			difficultyPrompts[body.difficulty as Difficulty] ||
 			difficultyPrompts[Difficulty.MEDIUM];
 
 		const response = await ai.models.generateContent({
@@ -56,8 +57,8 @@ export async function POST(request: NextRequest) {
 			contents: `You are a Primary 5 math teacher. Create a math word problem with these specifications:
 
 				PROBLEM CONTEXT: ${randomScenario}
-				PROBLEM TYPE: ${randomProblemType}
-				DIFFICULTY LEVEL: ${difficulty}
+				PROBLEM TYPE: ${problemTypePrompt}
+				DIFFICULTY LEVEL: ${body.difficulty}
 				${difficultyPrompt}
 
 				CRITICAL REQUIREMENTS:

@@ -28,6 +28,13 @@ interface Score {
 	bestStreak: number;
 }
 
+type ProblemType =
+	| "addition"
+	| "subtraction"
+	| "multiplication"
+	| "division"
+	| "mixed";
+
 export default function Home() {
 	const [problem, setProblem] = useState<MathProblem | null>(null);
 	const [userAnswer, setUserAnswer] = useState("");
@@ -50,6 +57,7 @@ export default function Home() {
 		bestStreak: 0,
 	});
 	const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
+	const [problemType, setProblemType] = useState<ProblemType>("mixed");
 
 	useEffect(() => {
 		loadProblemHistory();
@@ -75,7 +83,7 @@ export default function Home() {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ difficulty }),
+				body: JSON.stringify({ difficulty, problemType }),
 			});
 
 			if (!response.ok) {
@@ -441,6 +449,122 @@ export default function Home() {
 							>
 								{isLoading ? "Generating..." : "Generate New Problem"}
 							</button>
+						</div>
+
+						<div className="mb-6">
+							<label className="block text-lg font-semibold text-gray-700 mb-4">
+								Select Problem Type:
+							</label>
+							<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+								<label
+									className={`cursor-pointer transition duration-200 ${
+										problemType === "addition"
+											? "bg-blue-100 border-2 border-blue-500"
+											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
+									} rounded-lg p-4 text-center`}
+								>
+									<input
+										type="radio"
+										name="problemType"
+										value="addition"
+										checked={problemType === "addition"}
+										onChange={(e) =>
+											setProblemType(e.target.value as ProblemType)
+										}
+										className="sr-only"
+									/>
+									<div
+										className={`font-semibold ${
+											problemType === "addition"
+												? "text-blue-700"
+												: "text-gray-700"
+										}`}
+									>
+										Addition
+									</div>
+								</label>
+								<label
+									className={`cursor-pointer transition duration-200 ${
+										problemType === "subtraction"
+											? "bg-blue-100 border-2 border-blue-500"
+											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
+									} rounded-lg p-4 text-center`}
+								>
+									<input
+										type="radio"
+										name="problemType"
+										value="subtraction"
+										checked={problemType === "subtraction"}
+										onChange={(e) =>
+											setProblemType(e.target.value as ProblemType)
+										}
+										className="sr-only"
+									/>
+									<div
+										className={`font-semibold ${
+											problemType === "subtraction"
+												? "text-blue-700"
+												: "text-gray-700"
+										}`}
+									>
+										Subtraction
+									</div>
+								</label>
+								<label
+									className={`cursor-pointer transition duration-200 ${
+										problemType === "multiplication"
+											? "bg-blue-100 border-2 border-blue-500"
+											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
+									} rounded-lg p-4 text-center`}
+								>
+									<input
+										type="radio"
+										name="problemType"
+										value="multiplication"
+										checked={problemType === "multiplication"}
+										onChange={(e) =>
+											setProblemType(e.target.value as ProblemType)
+										}
+										className="sr-only"
+									/>
+									<div
+										className={`font-semibold ${
+											problemType === "multiplication"
+												? "text-blue-700"
+												: "text-gray-700"
+										}`}
+									>
+										Multiplication
+									</div>
+								</label>
+								<label
+									className={`cursor-pointer transition duration-200 ${
+										problemType === "division"
+											? "bg-blue-100 border-2 border-blue-500"
+											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
+									} rounded-lg p-4 text-center`}
+								>
+									<input
+										type="radio"
+										name="problemType"
+										value="division"
+										checked={problemType === "division"}
+										onChange={(e) =>
+											setProblemType(e.target.value as ProblemType)
+										}
+										className="sr-only"
+									/>
+									<div
+										className={`font-semibold ${
+											problemType === "division"
+												? "text-blue-700"
+												: "text-gray-700"
+										}`}
+									>
+										Division
+									</div>
+								</label>
+							</div>
 						</div>
 
 						{problem && (

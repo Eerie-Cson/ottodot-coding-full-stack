@@ -297,14 +297,14 @@ export default function Home() {
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
 			<main className="container mx-auto px-4 py-8 max-w-4xl">
-				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-					<h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
+				<div className="flex flex-row justify-between items-center gap-4 mb-8">
+					<h1 className="text-4xl sm:text-4xl font-bold text-gray-800">
 						Math Problem Generator
 					</h1>
-					<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+					<div className="flex flex-row items-center gap-3">
 						{/* Score Display */}
-						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-							<div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap justify-center">
+						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 shrink-0">
+							<div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-nowrap">
 								<div className="text-center">
 									<div className="font-bold text-gray-800">
 										{score.correct}/{score.total}
@@ -341,7 +341,7 @@ export default function Home() {
 
 						<button
 							onClick={() => setShowHistory(!showHistory)}
-							className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 text-sm sm:text-base"
+							className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 text-sm whitespace-nowrap shrink-0"
 						>
 							{showHistory ? "Back to Problem" : "View History"}
 						</button>
@@ -462,7 +462,7 @@ export default function Home() {
 							<label className="block text-base sm:text-lg font-semibold text-gray-700 mb-4">
 								Select Problem Type:
 							</label>
-							<div className="grid grid-cols-2 gap-3">
+							<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
 								<label
 									className={`cursor-pointer transition duration-200 ${
 										problemType === ProblemType.ADDITION

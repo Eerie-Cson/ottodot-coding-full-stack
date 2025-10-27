@@ -297,14 +297,14 @@ export default function Home() {
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
 			<main className="container mx-auto px-4 py-8 max-w-4xl">
-				<div className="flex justify-between items-center mb-8">
-					<h1 className="text-4xl font-bold text-gray-800">
+				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+					<h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
 						Math Problem Generator
 					</h1>
-					<div className="flex items-center gap-4">
+					<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
 						{/* Score Display */}
 						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-							<div className="flex items-center gap-4 text-sm">
+							<div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap justify-center">
 								<div className="text-center">
 									<div className="font-bold text-gray-800">
 										{score.correct}/{score.total}
@@ -341,7 +341,7 @@ export default function Home() {
 
 						<button
 							onClick={() => setShowHistory(!showHistory)}
-							className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+							className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 text-sm sm:text-base"
 						>
 							{showHistory ? "Back to Problem" : "View History"}
 						</button>
@@ -350,25 +350,25 @@ export default function Home() {
 
 				{error && (
 					<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-						<p className="text-red-800">{error}</p>
+						<p className="text-red-800 text-sm sm:text-base">{error}</p>
 					</div>
 				)}
 
 				{!showHistory ? (
 					<>
 						{/* Difficulty Selection */}
-						<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+						<div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
 							<div className="mb-6">
-								<label className="block text-lg font-semibold text-gray-700 mb-4">
+								<label className="block text-base sm:text-lg font-semibold text-gray-700 mb-4">
 									Select Difficulty:
 								</label>
-								<div className="flex gap-3">
+								<div className="flex flex-col sm:flex-row gap-3">
 									<label
 										className={`flex-1 cursor-pointer transition duration-200 ${
 											difficulty === Difficulty.EASY
 												? "bg-green-100 border-2 border-green-500"
 												: "bg-gray-50 border-2 border-gray-300 hover:border-green-400"
-										} rounded-lg p-4 text-center`}
+										} rounded-lg p-3 sm:p-4 text-center`}
 									>
 										<input
 											type="radio"
@@ -381,7 +381,7 @@ export default function Home() {
 											className="sr-only"
 										/>
 										<div
-											className={`font-semibold ${
+											className={`font-semibold text-sm sm:text-base ${
 												difficulty === Difficulty.EASY
 													? "text-green-700"
 													: "text-gray-700"
@@ -395,7 +395,7 @@ export default function Home() {
 											difficulty === Difficulty.MEDIUM
 												? "bg-yellow-100 border-2 border-yellow-500"
 												: "bg-gray-50 border-2 border-gray-300 hover:border-yellow-400"
-										} rounded-lg p-4 text-center`}
+										} rounded-lg p-3 sm:p-4 text-center`}
 									>
 										<input
 											type="radio"
@@ -408,7 +408,7 @@ export default function Home() {
 											className="sr-only"
 										/>
 										<div
-											className={`font-semibold ${
+											className={`font-semibold text-sm sm:text-base ${
 												difficulty === Difficulty.MEDIUM
 													? "text-yellow-700"
 													: "text-gray-700"
@@ -422,7 +422,7 @@ export default function Home() {
 											difficulty === Difficulty.HARD
 												? "bg-red-100 border-2 border-red-500"
 												: "bg-gray-50 border-2 border-gray-300 hover:border-red-400"
-										} rounded-lg p-4 text-center`}
+										} rounded-lg p-3 sm:p-4 text-center`}
 									>
 										<input
 											type="radio"
@@ -435,7 +435,7 @@ export default function Home() {
 											className="sr-only"
 										/>
 										<div
-											className={`font-semibold ${
+											className={`font-semibold text-sm sm:text-base ${
 												difficulty === Difficulty.HARD
 													? "text-red-700"
 													: "text-gray-700"
@@ -450,7 +450,7 @@ export default function Home() {
 							<button
 								onClick={generateProblem}
 								disabled={isLoading}
-								className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
+								className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 text-sm sm:text-base"
 							>
 								{isLoading && !problem && !difficulty
 									? "Generating..."
@@ -459,16 +459,16 @@ export default function Home() {
 						</div>
 
 						<div className="mb-6">
-							<label className="block text-lg font-semibold text-gray-700 mb-4">
+							<label className="block text-base sm:text-lg font-semibold text-gray-700 mb-4">
 								Select Problem Type:
 							</label>
-							<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+							<div className="grid grid-cols-2 gap-3">
 								<label
 									className={`cursor-pointer transition duration-200 ${
 										problemType === ProblemType.ADDITION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
-									} rounded-lg p-4 text-center`}
+									} rounded-lg p-3 sm:p-4 text-center`}
 								>
 									<input
 										type="radio"
@@ -481,7 +481,7 @@ export default function Home() {
 										className="sr-only"
 									/>
 									<div
-										className={`font-semibold ${
+										className={`font-semibold text-sm sm:text-base ${
 											problemType === ProblemType.ADDITION
 												? "text-blue-700"
 												: "text-gray-700"
@@ -495,7 +495,7 @@ export default function Home() {
 										problemType === ProblemType.SUBTRACTION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
-									} rounded-lg p-4 text-center`}
+									} rounded-lg p-3 sm:p-4 text-center`}
 								>
 									<input
 										type="radio"
@@ -508,7 +508,7 @@ export default function Home() {
 										className="sr-only"
 									/>
 									<div
-										className={`font-semibold ${
+										className={`font-semibold text-sm sm:text-base ${
 											problemType === ProblemType.SUBTRACTION
 												? "text-blue-700"
 												: "text-gray-700"
@@ -522,7 +522,7 @@ export default function Home() {
 										problemType === ProblemType.MULTIPLICATION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
-									} rounded-lg p-4 text-center`}
+									} rounded-lg p-3 sm:p-4 text-center`}
 								>
 									<input
 										type="radio"
@@ -535,7 +535,7 @@ export default function Home() {
 										className="sr-only"
 									/>
 									<div
-										className={`font-semibold ${
+										className={`font-semibold text-sm sm:text-base ${
 											problemType === ProblemType.MULTIPLICATION
 												? "text-blue-700"
 												: "text-gray-700"
@@ -549,7 +549,7 @@ export default function Home() {
 										problemType === ProblemType.DIVISION
 											? "bg-blue-100 border-2 border-blue-500"
 											: "bg-gray-50 border-2 border-gray-300 hover:border-blue-400"
-									} rounded-lg p-4 text-center`}
+									} rounded-lg p-3 sm:p-4 text-center`}
 								>
 									<input
 										type="radio"
@@ -562,7 +562,7 @@ export default function Home() {
 										className="sr-only"
 									/>
 									<div
-										className={`font-semibold ${
+										className={`font-semibold text-sm sm:text-base ${
 											problemType === ProblemType.DIVISION
 												? "text-blue-700"
 												: "text-gray-700"
@@ -575,11 +575,11 @@ export default function Home() {
 						</div>
 
 						{problem && (
-							<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-								<h2 className="text-xl font-semibold mb-4 text-gray-700">
+							<div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+								<h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">
 									Problem:
 								</h2>
-								<p className="text-lg text-gray-800 leading-relaxed mb-6">
+								<p className="text-base sm:text-lg text-gray-800 leading-relaxed mb-6 break-words">
 									{problem.problem_text}
 								</p>
 
@@ -588,17 +588,19 @@ export default function Home() {
 									<>
 										{hint ? (
 											<div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-												<h3 className="text-lg font-semibold text-purple-800 mb-2">
+												<h3 className="text-base sm:text-lg font-semibold text-purple-800 mb-2">
 													💡 Hint
 												</h3>
-												<p className="text-purple-700">{hint}</p>
+												<p className="text-purple-700 text-sm sm:text-base break-words">
+													{hint}
+												</p>
 											</div>
 										) : (
 											<div className="mb-4">
 												<button
 													onClick={getHint}
 													disabled={isLoadingHint}
-													className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+													className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto"
 												>
 													{isLoadingHint ? "Getting Hint..." : "Get Hint"}
 												</button>
@@ -612,10 +614,10 @@ export default function Home() {
 									<>
 										{solution ? (
 											<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-												<h3 className="text-lg font-semibold text-blue-800 mb-2">
+												<h3 className="text-base sm:text-lg font-semibold text-blue-800 mb-2">
 													📚 Step-by-Step Solution
 												</h3>
-												<div className="text-blue-700 whitespace-pre-line">
+												<div className="text-blue-700 whitespace-pre-line text-sm sm:text-base break-words">
 													{solution}
 												</div>
 											</div>
@@ -624,7 +626,7 @@ export default function Home() {
 												<button
 													onClick={getSolution}
 													disabled={isLoadingSolution}
-													className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+													className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto"
 												>
 													{isLoadingSolution
 														? "Loading Solution..."
@@ -650,7 +652,7 @@ export default function Home() {
 											value={userAnswer}
 											onChange={(e) => setUserAnswer(e.target.value)}
 											step="any"
-											className="text-gray-700 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+											className="text-gray-700 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base"
 											placeholder="Enter your answer"
 											required
 											disabled={isLoading || hasSubmitted}
@@ -660,7 +662,7 @@ export default function Home() {
 									<button
 										type="submit"
 										disabled={!userAnswer || isLoading || hasSubmitted}
-										className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
+										className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed text-sm sm:text-base"
 									>
 										{hasSubmitted
 											? "Already Submitted"
@@ -674,27 +676,29 @@ export default function Home() {
 
 						{feedback && (
 							<div
-								className={`rounded-lg shadow-lg p-6 ${
+								className={`rounded-lg shadow-lg p-4 sm:p-6 ${
 									isCorrect
 										? "bg-green-50 border-2 border-green-200"
 										: "bg-yellow-50 border-2 border-yellow-200"
 								}`}
 							>
-								<h2 className="text-xl font-semibold mb-4 text-gray-700">
+								<h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">
 									{isCorrect ? "✅ Correct!" : "❌ Not quite right"}
 								</h2>
-								<p className="text-gray-800 leading-relaxed">{feedback}</p>
+								<p className="text-gray-800 leading-relaxed text-sm sm:text-base break-words">
+									{feedback}
+								</p>
 							</div>
 						)}
 					</>
 				) : (
-					<div className="bg-white rounded-lg shadow-lg p-6">
-						<h2 className="text-2xl font-bold mb-6 text-gray-800">
+					<div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+						<h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800">
 							Problem History
 						</h2>
 
 						{problemHistory.length === 0 ? (
-							<p className="text-gray-600 text-center py-8">
+							<p className="text-gray-600 text-center py-8 text-sm sm:text-base">
 								No problems generated yet.
 							</p>
 						) : (
@@ -702,15 +706,19 @@ export default function Home() {
 								{problemHistory.map((session) => (
 									<div
 										key={session.id}
-										className="border border-gray-200 rounded-lg p-4"
+										className="border border-gray-200 rounded-lg p-3 sm:p-4"
 									>
-										<div className="flex justify-between items-start mb-2">
-											<h3 className="font-semibold text-gray-800">Problem</h3>
-											<span className="text-sm text-gray-500">
+										<div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
+											<h3 className="font-semibold text-gray-800 text-sm sm:text-base">
+												Problem
+											</h3>
+											<span className="text-xs sm:text-sm text-gray-500">
 												{new Date(session.created_at).toLocaleDateString()}
 											</span>
 										</div>
-										<p className="text-gray-700 mb-4">{session.problem_text}</p>
+										<p className="text-gray-700 mb-4 text-sm sm:text-base break-words">
+											{session.problem_text}
+										</p>
 
 										{session.submissions && session.submissions.length > 0 ? (
 											session.submissions.map((submission, index) => (
@@ -722,9 +730,9 @@ export default function Home() {
 															: "bg-red-50 border border-red-200"
 													}`}
 												>
-													<div className="flex justify-between items-center mb-2">
+													<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
 														<span
-															className={`font-medium ${
+															className={`font-medium text-sm sm:text-base ${
 																submission.is_correct
 																	? "text-green-800"
 																	: "text-red-800"
@@ -734,19 +742,19 @@ export default function Home() {
 																? "✅ Correct"
 																: "❌ Incorrect"}
 														</span>
-														<span className="text-sm text-gray-600">
+														<span className="text-xs sm:text-sm text-gray-600 break-words">
 															Your answer: {submission.user_answer}
 															{!submission.is_correct &&
 																` (Correct: ${session.correct_answer})`}
 														</span>
 													</div>
-													<p className="text-gray-700 text-sm">
+													<p className="text-gray-700 text-xs sm:text-sm break-words">
 														{submission.feedback_text}
 													</p>
 												</div>
 											))
 										) : (
-											<p className="text-gray-500 text-sm italic">
+											<p className="text-gray-500 text-xs sm:text-sm italic">
 												No submission yet
 											</p>
 										)}

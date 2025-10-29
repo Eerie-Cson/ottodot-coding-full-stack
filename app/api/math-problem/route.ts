@@ -81,13 +81,13 @@ export async function POST(request: NextRequest) {
 			}
 		`;
 
-		const problemResponse = await ai.models.generateContent({
+		const generateProblem = await ai.models.generateContent({
 			model: "gemini-2.0-flash",
 			contents: problemPrompt,
 		});
 
-		const problemResponseText = problemResponse.text;
-		const problemJson = extractJsonObject(problemResponseText);
+		const problemResponse = generateProblem.text;
+		const problemJson = extractJsonObject(problemResponse);
 
 		if (!problemJson || typeof problemJson.problem_text !== "string") {
 			throw new Error("Invalid problem JSON returned from AI (first call)");
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
 		const problemText: string = problemJson.problem_text;
 
-		const answerPromptBase = (
+		const answerPrompt = (
 			problem: string
 		) => `You are a careful Primary 5 math teacher and calculator.
 
@@ -113,17 +113,17 @@ export async function POST(request: NextRequest) {
 			Make sure final_answer is a single number (no units, no commas). The JSON must be the only content in your response.
 		`;
 
-		let finalAnswerNumber: number | null = null;
-		let lastAnswerResponseText: string | null = null;
+		let finalAnswer: number | null = null;
+		let answerResponse: string | null = null;
 
 		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-			const answerResponse = await ai.models.generateContent({
-				model: "gemini-2.0-flash",
-				contents: answerPromptBase(problemText),
+			const generateAnswer = await ai.models.generateContent({
+				model: "gemini-2.5-flash",
+				contents: answerPrompt(problemText),
 			});
 
-			lastAnswerResponseText = answerResponse.text;
-			const answerJson = extractJsonObject(lastAnswerResponseText);
+			answerResponse = generateAnswer.text;
+			const answerJson = extractJsonObject(answerResponse);
 
 			if (!answerJson) {
 				if (attempt === MAX_RETRIES) {
@@ -138,12 +138,12 @@ export async function POST(request: NextRequest) {
 			const parsedNum = Number(maybeNum);
 
 			if (typeof maybeNum === "number" && Number.isFinite(maybeNum)) {
-				finalAnswerNumber = maybeNum;
+				finalAnswer = maybeNum;
 				break;
 			}
 
 			if (!Number.isNaN(parsedNum) && Number.isFinite(parsedNum)) {
-				finalAnswerNumber = parsedNum;
+				finalAnswer = parsedNum;
 				break;
 			}
 
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 			continue;
 		}
 
-		if (finalAnswerNumber === null) {
+		if (finalAnswer === null) {
 			throw new Error("Failed to obtain a numeric final_answer");
 		}
 
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
 			.from("math_problem_sessions")
 			.insert({
 				problem_text: problemText,
-				correct_answer: finalAnswerNumber,
+				correct_answer: finalAnswer,
 			})
 			.select()
 			.single();
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json({
 			problem: {
 				problem_text: problemText,
-				final_answer: finalAnswerNumber,
+				final_answer: finalAnswer,
 			},
 			sessionId: session.id,
 		});

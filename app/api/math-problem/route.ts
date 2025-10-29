@@ -31,11 +31,21 @@ const problemTypePrompts = {
 
 const difficultyPrompts = {
 	[Difficulty.EASY]: `Use basic operations with whole numbers under 100. The problem should be solvable in 1-2 steps.`,
-
 	[Difficulty.MEDIUM]: `Use numbers up to 1000. May involve fractions, decimals, percentages, or multi-step reasoning (2-3 steps).`,
-
 	[Difficulty.HARD]: `Use complex operations, multi-step reasoning (3+ steps), and may involve combinations of operations with fractions, decimals, percentages, or ratios.`,
 };
+
+const MAX_RETRIES = 2;
+
+function extractJsonObject(text: string) {
+	const match = text.match(/\{[\s\S]*\}/);
+	if (!match) return null;
+	try {
+		return JSON.parse(match[0]);
+	} catch (err) {
+		return null;
+	}
+}
 
 export async function POST(request: NextRequest) {
 	try {
@@ -52,55 +62,106 @@ export async function POST(request: NextRequest) {
 			difficultyPrompts[body.difficulty as Difficulty] ||
 			difficultyPrompts[Difficulty.MEDIUM];
 
-		const response = await ai.models.generateContent({
-			model: "gemini-2.5-flash",
-			contents: `You are a Primary 5 math teacher. Create a math word problem with these specifications:
+		const problemPrompt = `You are a Primary 5 math teacher. Create a math word problem with these specifications:
 
-				PROBLEM CONTEXT: ${randomScenario}
-				PROBLEM TYPE: ${problemTypePrompt}
-				DIFFICULTY LEVEL: ${body.difficulty}
-				${difficultyPrompt}
+			PROBLEM CONTEXT: ${randomScenario}
+			PROBLEM TYPE: ${problemTypePrompt}
+			DIFFICULTY LEVEL: ${body.difficulty}
+			${difficultyPrompt}
 
-				CRITICAL REQUIREMENTS:
-				1. FIRST, create a clear, engaging word problem that has exactly ONE question and ONE numerical answer
-				2. THEN, calculate the correct answer step-by-step to ensure accuracy
-				3. FINALLY, provide ONLY the JSON output below
+			CRITICAL REQUIREMENTS:
+			1. Return ONLY JSON (no extra text)
+			2. The JSON must contain exactly one key: "problem_text"
+			3. The problem_text must be a single clear word problem with exactly ONE question and solvable from the given info
+			4. Do NOT include the answer or any calculation
 
-				IMPORTANT CONSTRAINTS:
-				- The problem must be solvable with the information provided
-				- Use age-appropriate language for 10-11 year olds
-				- The final answer must be a single number
-				- No multiple-choice options
-				- No follow-up questions or multiple questions (a, b, c, etc.)
+			OUTPUT FORMAT (JSON only, no other text):
+			{
+				"problem_text": "The math word problem text here..."
+			}
+		`;
 
-				OUTPUT FORMAT (JSON only, no other text):
-				{
-					"problem_text": "The math word problem text here...",
-					"final_answer": 123
-				}`,
+		const problemResponse = await ai.models.generateContent({
+			model: "gemini-2.0-flash",
+			contents: problemPrompt,
 		});
 
-		const responseText = response.text;
+		const problemResponseText = problemResponse.text;
+		const problemJson = extractJsonObject(problemResponseText);
 
-		const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-		if (!jsonMatch) {
-			throw new Error("Invalid response format from AI");
+		if (!problemJson || typeof problemJson.problem_text !== "string") {
+			throw new Error("Invalid problem JSON returned from AI (first call)");
 		}
 
-		const problemData = JSON.parse(jsonMatch[0]);
+		const problemText: string = problemJson.problem_text;
 
-		if (
-			!problemData.problem_text ||
-			typeof problemData.final_answer !== "number"
-		) {
-			throw new Error("Invalid problem data from AI");
+		const answerPromptBase = (
+			problem: string
+		) => `You are a careful Primary 5 math teacher and calculator.
+
+			Here is a single math word problem (for ages 10-11). Compute the correct numerical final answer.
+
+			Problem: "${problem}"
+
+			REQUIREMENTS:
+			1) Show your step-by-step calculation to make sure arithmetic is correct.
+			2) Then output ONLY JSON (no additional text) in this exact format:
+			{
+				"final_answer": 123
+			}
+
+			Make sure final_answer is a single number (no units, no commas). The JSON must be the only content in your response.
+		`;
+
+		let finalAnswerNumber: number | null = null;
+		let lastAnswerResponseText: string | null = null;
+
+		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+			const answerResponse = await ai.models.generateContent({
+				model: "gemini-2.0-flash",
+				contents: answerPromptBase(problemText),
+			});
+
+			lastAnswerResponseText = answerResponse.text;
+			const answerJson = extractJsonObject(lastAnswerResponseText);
+
+			if (!answerJson) {
+				if (attempt === MAX_RETRIES) {
+					throw new Error(
+						"AI failed to return valid JSON answer after retries"
+					);
+				}
+				continue;
+			}
+
+			const maybeNum = answerJson.final_answer;
+			const parsedNum = Number(maybeNum);
+
+			if (typeof maybeNum === "number" && Number.isFinite(maybeNum)) {
+				finalAnswerNumber = maybeNum;
+				break;
+			}
+
+			if (!Number.isNaN(parsedNum) && Number.isFinite(parsedNum)) {
+				finalAnswerNumber = parsedNum;
+				break;
+			}
+
+			if (attempt === MAX_RETRIES) {
+				throw new Error("AI returned non-numeric final_answer");
+			}
+			continue;
+		}
+
+		if (finalAnswerNumber === null) {
+			throw new Error("Failed to obtain a numeric final_answer");
 		}
 
 		const { data: session, error } = await supabase
 			.from("math_problem_sessions")
 			.insert({
-				problem_text: problemData.problem_text,
-				correct_answer: problemData.final_answer,
+				problem_text: problemText,
+				correct_answer: finalAnswerNumber,
 			})
 			.select()
 			.single();
@@ -111,8 +172,8 @@ export async function POST(request: NextRequest) {
 
 		return NextResponse.json({
 			problem: {
-				problem_text: problemData.problem_text,
-				final_answer: problemData.final_answer,
+				problem_text: problemText,
+				final_answer: finalAnswerNumber,
 			},
 			sessionId: session.id,
 		});
